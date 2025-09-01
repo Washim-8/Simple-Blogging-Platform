@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About & Contact | Washim Shaikh</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0F766E;
+            --primary-hover: #0D635C;
+            --bg-color: #F8FAF9;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --border-color: #E5E7EB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        /* Back Button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 3rem;
+            transition: color 0.2s ease;
+        }
+        
+        .back-btn svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+
+        .back-btn:hover {
+            color: var(--primary);
+        }
+
+        /* Card Style */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: 3rem;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        /* Headers */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--primary);
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+
+        /* Typography */
+        p {
+            color: var(--text-muted);
+            font-size: 1.0625rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .highlight {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        /* Contact Grid */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .contact-item {
+            background-color: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .contact-item:hover {
+            border-color: var(--primary);
+            background-color: #F0F7F6;
+        }
+
+        .contact-item strong {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-item a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: color 0.2s ease;
+        }
+
+        .contact-item a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .fade-in.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Specific Spacing */
+        .about-section p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .cta-text {
+            margin-top: 2rem;
+            font-weight: 500;
+            color: var(--text-main);
+            font-size: 1.125rem;
+        }
+        
+        @media (max-width: 640px) {
+            .card {
+                padding: 2rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Back Navigation -->
+        <a href="index.html" class="back-btn fade-in show">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to Platform
+        </a>
+
+        <!-- About Section -->
+        <section class="card fade-in about-section">
+            <h1>Hi, I'm Washim Shaikh</h1>
+            <div class="subtitle">Software Engineer & Builder</div>
+            
+            <p>
+                I'm a Computer Science Engineering student focused on building intelligent, scalable systems that solve actual problems. With a strong foundation in <span class="highlight">Python, Java, and Full Stack Web Development</span>, I enjoy taking complex ideas and turning them into practical, user-friendly applications. 
+            </p>
+            <p>
+                My curiosity naturally pulls me toward <span class="highlight">AI/ML and Prompt Engineering</span>. Whether it's architecting an e-auction platform for farmers like AgriTrade, designing LLM-based chatbot systems, or building predictive models for finance and healthcare, I thrive in environments where technology intersects with meaningful, real-world impact.
+            </p>
+            <p>
+                Beyond coding, I'm a continuous learner and problem solver. I believe that the best software isn't just about clean code—it's about creating intuitive experiences and bringing ambitious ideas to life. I approach every project with an analytical mindset, a passion for innovation, and a drive to build systems that matter.
+            </p>
+        </section>
+
+        <!-- Contact Section -->
+        <section class="card fade-in">
+            <h2>Let’s Build Something Great</h2>
+            
+            <p>
+                I’m always open to new opportunities, collaborations, or interesting project ideas. Whether you’re looking to build something from scratch, implement AI solutions, or improve an existing system, feel free to reach out.
+            </p>
+
+            <div class="contact-grid">
+                <div class="contact-item">
+                    <strong>Email</strong>
+                    <a href="mailto:washimshaikh33@gmail.com">washimshaikh33@gmail.com</a>
+                </div>
+                <div class="contact-item">
+                    <strong>Phone</strong>
+                    <a href="tel:+918884958185">+91 8884958185</a>
+                </div>
+                <div class="contact-item">
+                    <strong>GitHub</strong>
+                    <a href="https://github.com/Washim-8" target="_blank">github.com/Washim-8</a>
+                </div>
+                <div class="contact-item">
+                    <strong>LinkedIn</strong>
+                    <a href="https://www.linkedin.com/in/washim-shaikh-349868281/" target="_blank">View Profile</a>
+                </div>
+            </div>
+
+            <p class="cta-text">
+                Let’s connect and create something impactful today.
+            </p>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = document.querySelectorAll('.fade-in:not(.show)');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: "0px 0px -50px 0px"
+            });
+
+            elements.forEach(el => observer.observe(el));
+            
+            setTimeout(() => {
+                elements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if(rect.top < window.innerHeight) {
+                        el.classList.add('show');
+                    }
+                });
+            }, 100);
+        });
+    </script>
+</body>
+</html>

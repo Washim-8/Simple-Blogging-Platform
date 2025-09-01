@@ -1,0 +1,31 @@
+-- Create database if not exists
+CREATE DATABASE IF NOT EXISTS blog_db;
+
+-- Use the database
+USE blog_db;
+
+-- Create posts table
+CREATE TABLE IF NOT EXISTS posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert comprehensive sample data
+INSERT INTO posts (title, content, created_at) VALUES
+('Welcome to Simple Blog Platform', 'This is your first post on the Simple Blog Platform. You can edit or delete this post, or create new ones! This platform is designed to be simple yet powerful, allowing you to focus on what matters most: your content. Whether you are writing about technology, travel, lifestyle, or any other topic, our clean interface helps you get your thoughts out quickly and efficiently.', DATE_SUB(NOW(), INTERVAL 30 DAY)),
+
+('Getting Started with Web Development', 'Web development is an exciting field that combines creativity with technical skills. In this comprehensive guide, we will explore the fundamentals of HTML, CSS, and JavaScript. These three technologies form the backbone of every website you visit. HTML provides the structure, CSS handles the styling, and JavaScript adds interactivity. By mastering these basics, you will be well on your way to becoming a proficient web developer. Remember, practice makes perfect, so do not be afraid to experiment and build small projects.', DATE_SUB(NOW(), INTERVAL 28 DAY)),
+
+('The Art of Minimalist Design', 'Minimalism in design is not just about removing elements; it is about adding value. When we strip away the unnecessary, what remains becomes more powerful. Every color, every line, every space serves a purpose. Minimalist design creates calm, reduces cognitive load, and allows users to focus on what truly matters. Think about the most successful digital products today: they all embrace simplicity. Apple, Google, and Airbnb all use minimalist principles to create experiences that feel intuitive and effortless.', DATE_SUB(NOW(), INTERVAL 25 DAY)),
+
+('Travel Diaries: Exploring Hidden Gems', 'Traveling opens your mind and soul to new experiences. Last summer, I discovered a small coastal town in Portugal that changed my perspective on tourism. Instead of following the crowds to popular destinations, I wandered through narrow cobblestone streets, ate at family-owned restaurants, and watched the sunset with locals. These authentic experiences taught me that the best travel moments often happen off the beaten path. The key is to stay curious, be respectful of local cultures, and keep an open mind.', DATE_SUB(NOW(), INTERVAL 21 DAY)),
+
+('Mindfulness in the Digital Age', 'In our hyperconnected world, finding moments of peace has become increasingly challenging. Notifications constantly demand our attention, and the pressure to stay online never ends. However, practicing mindfulness can help us reclaim our mental space. Start with just five minutes of meditation each morning. Put your phone on silent. Breathe deeply. Notice the world around you without the urge to capture it for social media. Over time, these small practices can lead to profound changes in how we experience daily life.', DATE_SUB(NOW(), INTERVAL 18 DAY)),
+
+('The Future of Artificial Intelligence', 'Artificial Intelligence is no longer science fiction; it is reshaping our world in real-time. From healthcare diagnostics to creative writing, AI tools are augmenting human capabilities in unprecedented ways. However, this technological revolution also raises important ethical questions. How do we ensure AI benefits everyone? What safeguards should we implement? As we stand at this technological crossroads, it is crucial that we shape AI development with human values at its core.', DATE_SUB(NOW(), INTERVAL 14 DAY)),
+
+('Sustainable Living: Small Changes, Big Impact', 'Climate change can feel overwhelming, but individual actions do matter. Start with simple swaps: reusable bags instead of plastic, LED bulbs instead of incandescent, walking instead of driving for short trips. These choices add up. Moreover, they often inspire others to do the same. Sustainability is not about perfection; it is about progress. Every small step toward reducing your environmental footprint contributes to a larger collective impact that can help preserve our planet for future generations.', DATE_SUB(NOW(), INTERVAL 10 DAY)),
+
+('Mastering the Art of Coffee Brewing', 'There is something magical about the perfect cup of coffee. It is not just caffeine; it is ritual, science, and art combined. Whether you prefer pour-over, French press, or espresso, understanding the basics can transform your morning routine. The key variables are grind size, water temperature, and extraction time. Experiment with different beans from various regions: Ethiopian for fruity notes, Colombian for balance, Sumatran for earthiness. Your perfect brew is waiting to be discovered.', DATE_SUB(NOW(), INTERVAL 5 DAY));
