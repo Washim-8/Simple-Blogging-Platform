@@ -47,53 +47,46 @@ function initDarkMode() {
     });
 }
 
-// Toast Notification System
-function showToast(message, type = 'info', title = '') {
+// Toast Notification System - Simple & Clean
+function showToast(message, type = 'success') {
+    // Remove any existing toasts
+    $('.toast-notification').remove();
+    
     const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
+        success: '✓',
+        error: '✕',
+        warning: '!',
+        info: 'i'
     };
     
-    const titles = {
-        success: 'Success',
-        error: 'Error',
-        warning: 'Warning',
-        info: 'Info'
-    };
-    
-    const toastId = 'toast-' + Date.now();
     const toastHtml = `
-        <div class="toast toast-${type}" id="${toastId}">
-            <i class="fas ${icons[type]} toast-icon"></i>
-            <div class="toast-content">
-                <div class="toast-title">${title || titles[type]}</div>
-                <div class="toast-message">${message}</div>
-            </div>
-            <button class="toast-close" onclick="closeToast('${toastId}')">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="toast-progress"></div>
+        <div class="toast-notification toast-${type}">
+            <div class="toast-icon">${icons[type]}</div>
+            <div class="toast-message">${message}</div>
         </div>
     `;
     
-    $('#toastContainer').append(toastHtml);
+    $('body').append(toastHtml);
     
-    // Auto remove after 5 seconds
+    // Show toast
     setTimeout(() => {
-        closeToast(toastId);
-    }, 5000);
+        $('.toast-notification').addClass('show');
+    }, 10);
+    
+    // Auto remove after 2 seconds
+    setTimeout(() => {
+        $('.toast-notification').removeClass('show');
+        setTimeout(() => {
+            $('.toast-notification').remove();
+        }, 300);
+    }, 2000);
 }
 
-function closeToast(toastId) {
-    const toast = $('#' + toastId);
-    if (toast.length) {
-        toast.addClass('hiding');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }
+function closeToast() {
+    $('.toast-notification').removeClass('show');
+    setTimeout(() => {
+        $('.toast-notification').remove();
+    }, 300);
 }
 
 // Setup Event Handlers
@@ -217,6 +210,7 @@ function loadPosts() {
         type: 'GET',
         dataType: 'json',
         success: function(response) {
+            console.log('Posts loaded:', response);
             // Hide skeleton loading after a brief delay for smooth transition
             setTimeout(() => {
                 $('#skeletonLoading').hide();
@@ -225,6 +219,11 @@ function loadPosts() {
             }, 500);
         },
         error: function(xhr, status, error) {
+            console.error('Load posts error:', {
+                status: status,
+                error: error,
+                responseText: xhr.responseText
+            });
             $('#skeletonLoading').hide();
             showToast('Error loading posts: ' + error, 'error');
             console.error('Error loading posts:', error);
@@ -254,13 +253,21 @@ function displayPosts(response) {
 
     if (posts.length === 0) {
         $('#noPosts').show();
+        $('#posts').hide();
         return;
     }
     
     $('#noPosts').hide();
+    $('#posts').show();
     
-    // Apply current filter
-    filterPosts();
+    // Render all posts immediately
+    $.each(allPosts, function(index, post) {
+        var postHtml = generatePostHtml(post, index);
+        postsContainer.append(postHtml);
+    });
+
+    // Add event listeners for interactive elements
+    addPostEventListeners();
 }
 
 // Function to filter posts based on search and filter type
@@ -509,18 +516,31 @@ function savePost() {
         },
         dataType: 'json',
         success: function(response) {
+            console.log('Server response:', response);
             if (response.success) {
                 $('#postModal').modal('hide');
                 showToast(response.message, 'success');
                 loadPosts();
                 resetForm();
             } else {
-                showToast(response.message, 'error');
+                showToast(response.message || 'Failed to save post', 'error');
             }
         },
         error: function(xhr, status, error) {
-            showToast('Error saving post: ' + error, 'error');
-            console.error('Error saving post:', error);
+            console.error('AJAX Error:', {
+                status: status,
+                error: error,
+                responseText: xhr.responseText,
+                statusCode: xhr.status
+            });
+            
+            // Try to parse error response
+            try {
+                const errorResponse = JSON.parse(xhr.responseText);
+                showToast(errorResponse.message || 'Error saving post', 'error');
+            } catch (e) {
+                showToast('Error saving post: ' + (xhr.responseText || error), 'error');
+            }
         },
         complete: function() {
             saveButton.html(originalText);

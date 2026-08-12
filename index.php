@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Blog Platform</title>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
     <!-- Font Awesome for icons -->
@@ -25,7 +25,7 @@
         <div class="container">
             <a class="navbar-brand" href="#"><i class="fas fa-pen-fancy mr-2"></i>Simple Blog Platform</a>
             <div class="d-flex align-items-center">
-                <a href="about_contact.html" class="text-white mr-3" title="About & Contact" style="font-size: 1.5rem; transition: color 0.3s; opacity: 0.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                <a href="about_contact.php" class="text-white mr-3" title="About & Contact" style="font-size: 1.5rem; transition: color 0.3s; opacity: 0.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
                     <i class="fas fa-user-circle"></i>
                 </a>
                 <button class="dark-mode-toggle" id="darkModeToggle" title="Toggle Dark Mode">

@@ -1,75 +1,149 @@
 <?php
-// Simple file-based database since SQLite driver is not available
+/**
+ * Database Connection and Functions
+ * 
+ * This file handles database connections with automatic fallback:
+ * - Production/PostgreSQL: Uses PDO with PostgreSQL
+ * - Local Development: Falls back to JSON file storage if PostgreSQL unavailable
+ */
 
-// Define the path to our JSON database file
+// Suppress any warnings/notices
+error_reporting(E_ERROR | E_PARSE);
+
+// Global variables
+$pdo = null;
+$useJsonFallback = false;
 $dbPath = __DIR__ . '/../db/blog_data.json';
-$dbDir = dirname($dbPath);
 
-// Ensure the directory exists
-if (!is_dir($dbDir)) {
-    mkdir($dbDir, 0777, true);
-}
-
-// Initialize the database if it doesn't exist
-if (!file_exists($dbPath)) {
-    // Create sample data
-    $initialData = [
-        [
-            'id' => 1,
-            'title' => 'Welcome to Simple Blog Platform',
-            'content' => 'This is your first post on the Simple Blog Platform. You can edit or delete this post, or create new ones!',
-            'created_at' => date('Y-m-d H:i:s')
-        ],
-        [
-            'id' => 2,
-            'title' => 'Getting Started with Blogging',
-            'content' => 'Blogging is a great way to share your thoughts and ideas with the world. Start by creating engaging content that resonates with your audience.',
-            'created_at' => date('Y-m-d H:i:s')
-        ]
-    ];
+/**
+ * Get database connection using PDO
+ * Automatically falls back to JSON if PostgreSQL is unavailable
+ * 
+ * @return PDO|null Database connection or null if using JSON fallback
+ */
+function getConnection() {
+    global $pdo, $useJsonFallback;
     
-    // Save to file
-    file_put_contents($dbPath, json_encode($initialData, JSON_PRETTY_PRINT));
+    // Return existing connection if available
+    if ($pdo !== null) {
+        return $pdo;
+    }
+    
+    // If already using JSON fallback, return null
+    if ($useJsonFallback) {
+        return null;
+    }
+    
+    try {
+        // Read DATABASE_URL from environment
+        $databaseUrl = getenv('DATABASE_URL');
+        
+        if ($databaseUrl) {
+            // Parse Render PostgreSQL connection string
+            // Format: postgres://user:password@host:port/database
+            $dbParts = parse_url($databaseUrl);
+            
+            $host = $dbParts['host'];
+            $port = isset($dbParts['port']) ? $dbParts['port'] : 5432;
+            $dbname = ltrim($dbParts['path'], '/');
+            $user = $dbParts['user'];
+            $password = $dbParts['pass'];
+            
+            // Create DSN
+            $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
+            
+            // Create PDO instance with proper options
+            $pdo = new PDO($dsn, $user, $password, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false
+            ]);
+            
+            return $pdo;
+        } else {
+            // No DATABASE_URL - use JSON fallback for local development
+            $useJsonFallback = true;
+            initializeJsonDatabase();
+            return null;
+        }
+        
+    } catch (PDOException $e) {
+        // PostgreSQL connection failed - fall back to JSON
+        $useJsonFallback = true;
+        initializeJsonDatabase();
+        return null;
+    }
 }
 
-// Database functions
+/**
+ * Initialize JSON database file if it doesn't exist
+ */
+function initializeJsonDatabase() {
+    global $dbPath;
+    
+    $dbDir = dirname($dbPath);
+    
+    // Ensure the directory exists
+    if (!is_dir($dbDir)) {
+        @mkdir($dbDir, 0777, true);
+    }
+    
+    // Initialize the database if it doesn't exist
+    if (!file_exists($dbPath)) {
+        @file_put_contents($dbPath, json_encode([], JSON_PRETTY_PRINT));
+    }
+}
 
 /**
  * Get all posts from the database
- * @return array Array of posts
+ * @return array Array of posts sorted by created_at (newest first)
  */
 function getAllPosts() {
-    global $dbPath;
+    global $useJsonFallback, $dbPath;
     
-    if (!file_exists($dbPath)) {
-        return [];
+    // Initialize connection to set useJsonFallback flag
+    getConnection();
+    
+    // Use JSON fallback if PostgreSQL unavailable
+    if ($useJsonFallback) {
+        if (!file_exists($dbPath)) {
+            return [];
+        }
+        
+        $jsonContent = @file_get_contents($dbPath);
+        if ($jsonContent === false) {
+            return [];
+        }
+        
+        $posts = json_decode($jsonContent, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($posts)) {
+            return [];
+        }
+        
+        // Sort by created_at (newest first)
+        usort($posts, function($a, $b) {
+            return strtotime($b['created_at']) - strtotime($a['created_at']);
+        });
+        
+        return $posts;
     }
     
-    // Debug
-    error_log("Reading posts from: {$dbPath}");
-    $jsonContent = file_get_contents($dbPath);
-    error_log("JSON content: {$jsonContent}");
-    
-    $posts = json_decode($jsonContent, true);
-    
-    // Check for JSON errors
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        error_log("JSON decode error: " . json_last_error_msg());
+    // Use PostgreSQL
+    try {
+        $pdo = getConnection();
+        
+        $stmt = $pdo->query("
+            SELECT id, title, content, created_at 
+            FROM posts 
+            ORDER BY created_at DESC
+        ");
+        
+        return $stmt->fetchAll();
+        
+    } catch (Exception $e) {
         return [];
     }
-    
-    // Ensure $posts is an array
-    if (!is_array($posts)) {
-        error_log("Posts is not an array: " . gettype($posts));
-        return [];
-    }
-    
-    // Sort by created_at (newest first)
-    usort($posts, function($a, $b) {
-        return strtotime($b['created_at']) - strtotime($a['created_at']);
-    });
-    
-    return $posts;
 }
 
 /**
@@ -78,24 +152,45 @@ function getAllPosts() {
  * @return array|null Post data or null if not found
  */
 function getPostById($id) {
-    $posts = getAllPosts();
+    global $useJsonFallback, $dbPath;
     
-    // Ensure $id is treated as an integer for comparison
     $id = intval($id);
     
-    // Debug
-    error_log("Looking for post ID: $id");
-    error_log("Available posts: " . json_encode($posts));
+    // Initialize connection to set useJsonFallback flag
+    getConnection();
     
-    foreach ($posts as $post) {
-        if (intval($post['id']) === $id) {
-            error_log("Found post: " . json_encode($post));
-            return $post;
+    // Use JSON fallback if PostgreSQL unavailable
+    if ($useJsonFallback) {
+        $posts = getAllPosts();
+        
+        foreach ($posts as $post) {
+            if (intval($post['id']) === $id) {
+                return $post;
+            }
         }
+        
+        return null;
     }
     
-    error_log("Post ID $id not found");
-    return null;
+    // Use PostgreSQL
+    try {
+        $pdo = getConnection();
+        
+        $stmt = $pdo->prepare("
+            SELECT id, title, content, created_at 
+            FROM posts 
+            WHERE id = :id
+        ");
+        
+        $stmt->execute(['id' => $id]);
+        
+        $post = $stmt->fetch();
+        
+        return $post ?: null;
+        
+    } catch (Exception $e) {
+        return null;
+    }
 }
 
 /**
@@ -105,31 +200,57 @@ function getPostById($id) {
  * @return bool Success status
  */
 function createPost($title, $content) {
-    global $dbPath;
+    global $useJsonFallback, $dbPath;
     
-    $posts = getAllPosts();
+    // Initialize connection to set useJsonFallback flag
+    getConnection();
     
-    // Find the highest ID
-    $maxId = 0;
-    foreach ($posts as $post) {
-        if ($post['id'] > $maxId) {
-            $maxId = $post['id'];
+    // Use JSON fallback if PostgreSQL unavailable
+    if ($useJsonFallback) {
+        $posts = getAllPosts();
+        
+        // Find the highest ID
+        $maxId = 0;
+        foreach ($posts as $post) {
+            if ($post['id'] > $maxId) {
+                $maxId = $post['id'];
+            }
         }
+        
+        // Create new post
+        $newPost = [
+            'id' => $maxId + 1,
+            'title' => $title,
+            'content' => $content,
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        
+        // Add to array
+        $posts[] = $newPost;
+        
+        // Save to file
+        return @file_put_contents($dbPath, json_encode($posts, JSON_PRETTY_PRINT)) !== false;
     }
     
-    // Create new post
-    $newPost = [
-        'id' => $maxId + 1,
-        'title' => $title,
-        'content' => $content,
-        'created_at' => date('Y-m-d H:i:s')
-    ];
-    
-    // Add to array
-    $posts[] = $newPost;
-    
-    // Save to file
-    return file_put_contents($dbPath, json_encode($posts, JSON_PRETTY_PRINT)) !== false;
+    // Use PostgreSQL
+    try {
+        $pdo = getConnection();
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO posts (title, content, created_at) 
+            VALUES (:title, :content, NOW())
+        ");
+        
+        $result = $stmt->execute([
+            'title' => $title,
+            'content' => $content
+        ]);
+        
+        return $result;
+        
+    } catch (Exception $e) {
+        return false;
+    }
 }
 
 /**
@@ -140,43 +261,56 @@ function createPost($title, $content) {
  * @return bool Success status
  */
 function updatePost($id, $title, $content) {
-    global $dbPath;
+    global $useJsonFallback, $dbPath;
     
-    // Convert ID to integer and validate
     $id = (int)$id;
     
-    // Debug
-    error_log("Attempting to update post with ID: {$id}");
+    // Initialize connection to set useJsonFallback flag
+    getConnection();
     
-    // Get all posts
-    $posts = getAllPosts();
-    error_log("Found " . count($posts) . " posts total");
-    
-    $updated = false;
-    
-    // Loop through posts to find matching ID
-    foreach ($posts as $key => $post) {
-        $postId = (int)$post['id'];
-        error_log("Checking post ID: {$postId} against {$id}");
+    // Use JSON fallback if PostgreSQL unavailable
+    if ($useJsonFallback) {
+        $posts = getAllPosts();
+        $updated = false;
         
-        if ($postId === $id) {
-            error_log("Found matching post at index {$key}");
-            $posts[$key]['title'] = $title;
-            $posts[$key]['content'] = $content;
-            $updated = true;
-            break;
+        foreach ($posts as $key => $post) {
+            if ((int)$post['id'] === $id) {
+                $posts[$key]['title'] = $title;
+                $posts[$key]['content'] = $content;
+                $updated = true;
+                break;
+            }
         }
+        
+        if ($updated) {
+            return @file_put_contents($dbPath, json_encode($posts, JSON_PRETTY_PRINT)) !== false;
+        }
+        
+        return false;
     }
     
-    if ($updated) {
-        error_log("Updating post with ID: {$id}");
-        $result = file_put_contents($dbPath, json_encode($posts, JSON_PRETTY_PRINT));
-        error_log("File write result: {$result} bytes");
-        return $result !== false;
+    // Use PostgreSQL
+    try {
+        $pdo = getConnection();
+        
+        $stmt = $pdo->prepare("
+            UPDATE posts 
+            SET title = :title, content = :content 
+            WHERE id = :id
+        ");
+        
+        $result = $stmt->execute([
+            'id' => $id,
+            'title' => $title,
+            'content' => $content
+        ]);
+        
+        // Check if any rows were affected
+        return $stmt->rowCount() > 0;
+        
+    } catch (Exception $e) {
+        return false;
     }
-    
-    error_log("Failed to find post with ID: {$id}");
-    return false;
 }
 
 /**
@@ -185,23 +319,46 @@ function updatePost($id, $title, $content) {
  * @return bool Success status
  */
 function deletePost($id) {
-    global $dbPath;
+    global $useJsonFallback, $dbPath;
     
-    $posts = getAllPosts();
-    $initialCount = count($posts);
+    $id = intval($id);
     
-    // Filter out the post to delete
-    $posts = array_filter($posts, function($post) use ($id) {
-        return $post['id'] != $id;
-    });
+    // Initialize connection to set useJsonFallback flag
+    getConnection();
     
-    // Reindex array
-    $posts = array_values($posts);
-    
-    if (count($posts) < $initialCount) {
-        return file_put_contents($dbPath, json_encode($posts, JSON_PRETTY_PRINT)) !== false;
+    // Use JSON fallback if PostgreSQL unavailable
+    if ($useJsonFallback) {
+        $posts = getAllPosts();
+        $initialCount = count($posts);
+        
+        // Filter out the post to delete
+        $posts = array_filter($posts, function($post) use ($id) {
+            return intval($post['id']) != $id;
+        });
+        
+        // Reindex array
+        $posts = array_values($posts);
+        
+        if (count($posts) < $initialCount) {
+            return @file_put_contents($dbPath, json_encode($posts, JSON_PRETTY_PRINT)) !== false;
+        }
+        
+        return false;
     }
     
-    return false;
+    // Use PostgreSQL
+    try {
+        $pdo = getConnection();
+        
+        $stmt = $pdo->prepare("DELETE FROM posts WHERE id = :id");
+        
+        $result = $stmt->execute(['id' => $id]);
+        
+        // Check if any rows were affected
+        return $stmt->rowCount() > 0;
+        
+    } catch (Exception $e) {
+        return false;
+    }
 }
 ?>
