@@ -99,51 +99,19 @@ try {
         echo "📚 Adding sample blog posts...\n";
         
         $samplePosts = [
-            [
-                'title' => 'Welcome to Simple Blog Platform',
-                'content' => 'This is your first post on the Simple Blog Platform. You can edit or delete this post, or create new ones! This platform is designed to be simple yet powerful, allowing you to focus on what matters most: your content.',
-                'days_ago' => 30
-            ],
-            [
-                'title' => 'Getting Started with Web Development',
-                'content' => 'Web development is an exciting field that combines creativity with technical skills. In this comprehensive guide, we will explore the fundamentals of HTML, CSS, and JavaScript. These three technologies form the backbone of every website you visit.',
-                'days_ago' => 28
-            ],
-            [
-                'title' => 'The Art of Minimalist Design',
-                'content' => 'Minimalism in design is not just about removing elements; it is about adding value. When we strip away the unnecessary, what remains becomes more powerful. Every color, every line, every space serves a purpose.',
-                'days_ago' => 25
-            ],
-            [
-                'title' => 'Travel Diaries: Exploring Hidden Gems',
-                'content' => 'Traveling opens your mind and soul to new experiences. Last summer, I discovered a small coastal town that changed my perspective on tourism. Instead of following the crowds to popular destinations, I wandered through narrow streets.',
-                'days_ago' => 21
-            ],
-            [
-                'title' => 'Mindfulness in the Digital Age',
-                'content' => 'In our hyperconnected world, finding moments of peace has become increasingly challenging. Notifications constantly demand our attention, and the pressure to stay online never ends. However, practicing mindfulness can help us reclaim our mental space.',
-                'days_ago' => 18
-            ],
-            [
-                'title' => 'The Future of Artificial Intelligence',
-                'content' => 'Artificial Intelligence is no longer science fiction; it is reshaping our world in real-time. From healthcare diagnostics to creative writing, AI tools are augmenting human capabilities in unprecedented ways.',
-                'days_ago' => 14
-            ],
-            [
-                'title' => 'Sustainable Living: Small Changes, Big Impact',
-                'content' => 'Climate change can feel overwhelming, but individual actions do matter. Start with simple swaps: reusable bags instead of plastic, LED bulbs instead of incandescent, walking instead of driving for short trips.',
-                'days_ago' => 10
-            ],
-            [
-                'title' => 'Mastering the Art of Coffee Brewing',
-                'content' => 'There is something magical about the perfect cup of coffee. It is not just caffeine; it is ritual, science, and art combined. Whether you prefer pour-over, French press, or espresso, understanding the basics can transform your morning routine.',
-                'days_ago' => 5
-            ]
+            ['title' => 'Welcome to Simple Blog Platform', 'content' => 'This is your first post on the Simple Blog Platform. You can edit or delete this post, or create new ones! This platform is designed to be simple yet powerful, allowing you to focus on what matters most: your content.', 'days_ago' => 30],
+            ['title' => 'Getting Started with Web Development', 'content' => 'Web development is an exciting field that combines creativity with technical skills. In this comprehensive guide, we will explore the fundamentals of HTML, CSS, and JavaScript. These three technologies form the backbone of every website you visit.', 'days_ago' => 28],
+            ['title' => 'The Art of Minimalist Design', 'content' => 'Minimalism in design is not just about removing elements; it is about adding value. When we strip away the unnecessary, what remains becomes more powerful. Every color, every line, every space serves a purpose.', 'days_ago' => 25],
+            ['title' => 'Travel Diaries: Exploring Hidden Gems', 'content' => 'Traveling opens your mind and soul to new experiences. Last summer, I discovered a small coastal town that changed my perspective on tourism. Instead of following the crowds to popular destinations, I wandered through narrow streets.', 'days_ago' => 21],
+            ['title' => 'Mindfulness in the Digital Age', 'content' => 'In our hyperconnected world, finding moments of peace has become increasingly challenging. Notifications constantly demand our attention, and the pressure to stay online never ends. However, practicing mindfulness can help us reclaim our mental space.', 'days_ago' => 18],
+            ['title' => 'The Future of Artificial Intelligence', 'content' => 'Artificial Intelligence is no longer science fiction; it is reshaping our world in real-time. From healthcare diagnostics to creative writing, AI tools are augmenting human capabilities in unprecedented ways.', 'days_ago' => 14],
+            ['title' => 'Sustainable Living: Small Changes, Big Impact', 'content' => 'Climate change can feel overwhelming, but individual actions do matter. Start with simple swaps: reusable bags instead of plastic, LED bulbs instead of incandescent, walking instead of driving for short trips.', 'days_ago' => 10],
+            ['title' => 'Mastering the Art of Coffee Brewing', 'content' => 'There is something magical about the perfect cup of coffee. It is not just caffeine; it is ritual, science, and art combined. Whether you prefer pour-over, French press, or espresso, understanding the basics can transform your morning routine.', 'days_ago' => 5]
         ];
         
         $stmt = $pdo->prepare("
             INSERT INTO posts (title, content, created_at) 
-            VALUES (:title, :content, NOW() - INTERVAL ':days days')
+            VALUES (:title, :content, NOW() - INTERVAL '1 day' * :days)
         ");
         
         foreach ($samplePosts as $post) {
