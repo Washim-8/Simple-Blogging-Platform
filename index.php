@@ -192,7 +192,7 @@
     <!-- Footer -->
     <footer class="py-3 mt-5">
         <div class="container text-center">
-            <p class="mb-0">&copy; 2025 Simple Blog Platform | Made with <i class="fas fa-heart heart"></i> for bloggers</p>
+            <p class="mb-0">&copy; 2026 Simple Blog Platform | Made with <i class="fas fa-heart heart"></i> for bloggers</p>
         </div>
     </footer>
 
