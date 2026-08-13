@@ -20,25 +20,54 @@ try {
     $databaseUrl = getenv('DATABASE_URL');
     
     if (!$databaseUrl) {
-        die("❌ ERROR: DATABASE_URL environment variable not found!\n");
+        echo "❌ ERROR: DATABASE_URL environment variable not found!\n\n";
+        echo "Please follow these steps:\n";
+        echo "1. Go to Render Dashboard\n";
+        echo "2. Click on your Web Service (simple-blogging-platform)\n";
+        echo "3. Click 'Environment' in left sidebar\n";
+        echo "4. Click 'Add Environment Variable'\n";
+        echo "5. Key: DATABASE_URL\n";
+        echo "6. Value: Click 'Select Database' dropdown and choose 'blog-db'\n";
+        echo "7. Click 'Save Changes'\n";
+        echo "8. Wait for redeploy, then refresh this page\n";
+        die();
     }
+    
+    echo "📡 DATABASE_URL found!\n";
+    echo "🔗 URL: " . substr($databaseUrl, 0, 20) . "...\n\n";
     
     echo "📡 Connecting to database...\n";
     
-    // Parse database URL
+    // Parse database URL - handle both postgres:// and postgresql://
+    $databaseUrl = str_replace('postgres://', 'postgresql://', $databaseUrl);
     $dbParts = parse_url($databaseUrl);
+    
+    if (!$dbParts || !isset($dbParts['host'])) {
+        echo "❌ ERROR: Invalid DATABASE_URL format!\n";
+        echo "Current URL: " . $databaseUrl . "\n\n";
+        echo "Expected format: postgres://user:password@host:port/database\n";
+        die();
+    }
+    
     $host = $dbParts['host'];
     $port = isset($dbParts['port']) ? $dbParts['port'] : 5432;
     $dbname = ltrim($dbParts['path'], '/');
     $user = $dbParts['user'];
-    $password = $dbParts['pass'];
+    $password = $dbParts['pass'] ?? '';
+    
+    echo "📊 Connection details:\n";
+    echo "   Host: {$host}\n";
+    echo "   Port: {$port}\n";
+    echo "   Database: {$dbname}\n";
+    echo "   User: {$user}\n\n";
     
     $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
     
     // Create PDO connection
     $pdo = new PDO($dsn, $user, $password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_TIMEOUT => 30
     ]);
     
     echo "✅ Connected to database successfully!\n\n";
@@ -147,20 +176,26 @@ try {
     }
     
     // Mark setup as complete
-    file_put_contents($setupFile, date('Y-m-d H:i:s'));
+    @file_put_contents($setupFile, date('Y-m-d H:i:s'));
     
     echo "🎉 DATABASE SETUP COMPLETE!\n\n";
     echo "You can now visit your homepage:\n";
-    echo "<a href='/'>Go to Blog Platform</a>\n\n";
+    echo "<a href='/' style='color: #0F766E; font-size: 18px; font-weight: bold;'>→ Go to Blog Platform</a>\n\n";
     echo "⚠️ For security, you can delete this file: setup-database.php\n";
     
 } catch (PDOException $e) {
     echo "❌ DATABASE ERROR:\n";
-    echo $e->getMessage() . "\n";
-    echo "\nPlease check:\n";
-    echo "1. DATABASE_URL environment variable is set correctly\n";
-    echo "2. PostgreSQL database is running on Render\n";
-    echo "3. Database credentials are correct\n";
+    echo $e->getMessage() . "\n\n";
+    echo "Please check:\n";
+    echo "1. DATABASE_URL environment variable is set correctly in Render\n";
+    echo "2. PostgreSQL database is 'Available' (green status) on Render\n";
+    echo "3. Database and Web Service are in the SAME region\n\n";
+    echo "How to fix:\n";
+    echo "1. Go to Render Dashboard → Your Web Service\n";
+    echo "2. Click 'Environment' in left sidebar\n";
+    echo "3. Find DATABASE_URL variable\n";
+    echo "4. Click 'Select Database' and choose your PostgreSQL database\n";
+    echo "5. Save and wait for redeploy\n";
 } catch (Exception $e) {
     echo "❌ ERROR:\n";
     echo $e->getMessage() . "\n";
