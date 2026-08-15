@@ -18,6 +18,9 @@ $(document).ready(function() {
     
     // Setup character counter
     setupCharacterCounter();
+    
+    // Start keep-alive pinger to prevent Render from spinning down
+    startKeepAlivePinger();
 });
 
 // Dark Mode Functions
@@ -673,4 +676,45 @@ function getAlertIcon(type) {
         case 'info': return 'fa-info-circle';
         default: return 'fa-info-circle';
     }
+}
+
+// Keep-Alive Pinger - Prevents Render free-tier from spinning down the service
+function startKeepAlivePinger() {
+    const PING_INTERVAL = 3 * 60 * 1000; // Every 3 minutes (180,000 ms)
+    const MAX_BACKOFF_MS = 30000;
+    let consecutiveFailures = 0;
+
+    function pingServer() {
+        const cacheBuster = Date.now();
+        const pingUrl = (window.location.pathname.includes('.php') || window.location.pathname === '/')
+            ? `keepalive.php?source=frontend&_=${cacheBuster}`
+            : `../keepalive.php?source=frontend&_=${cacheBuster}`;
+
+        fetch(pingUrl, {
+            method: 'GET',
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+        })
+        .then(response => {
+            if (response.ok) {
+                consecutiveFailures = 0;
+                console.log('[KeepAlive] Ping OK at', new Date().toLocaleTimeString());
+            } else {
+                throw new Error('HTTP ' + response.status);
+            }
+        })
+        .catch(error => {
+            consecutiveFailures++;
+            console.warn('[KeepAlive] Ping failed:', error.message, '(attempt', consecutiveFailures + ')');
+        });
+    }
+
+    pingServer();
+    setInterval(pingServer, PING_INTERVAL);
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            setTimeout(pingServer, 1000);
+        }
+    });
 }

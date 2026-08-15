@@ -1,4 +1,33 @@
-<!DOCTYPE html>
+<?php
+$keepaliveLockFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'blog_keepalive.lock';
+$keepaliveInterval = 180;
+$keepaliveNow = time();
+$keepaliveLast = file_exists($keepaliveLockFile) ? (int) @file_get_contents($keepaliveLockFile) : 0;
+if (($keepaliveNow - $keepaliveLast) >= $keepaliveInterval) {
+    @file_put_contents($keepaliveLockFile, (string) $keepaliveNow);
+    $ka_scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $ka_host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $ka_urls = [
+        $ka_scheme . '://' . $ka_host . '/keepalive.php?source=selfping-page',
+        $ka_scheme . '://' . $ka_host . '/healthz'
+    ];
+    foreach ($ka_urls as $ka_url) {
+        $ka_ch = curl_init($ka_url);
+        curl_setopt($ka_ch, CURLOPT_RETURNTRANSFER, false);
+        curl_setopt($ka_ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ka_ch, CURLOPT_NOSIGNAL, 1);
+        curl_setopt($ka_ch, CURLOPT_TIMEOUT_MS, 800);
+        curl_setopt($ka_ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
+        curl_setopt($ka_ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ka_ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ka_ch, CURLOPT_USERAGENT, 'BlogKeepAlive/1.0 (page-selfping)');
+        curl_setopt($ka_ch, CURLOPT_NOBODY, true);
+        @curl_exec($ka_ch);
+        @curl_close($ka_ch);
+    }
+}
+unset($keepaliveLockFile, $keepaliveInterval, $keepaliveNow, $keepaliveLast, $ka_scheme, $ka_host, $ka_urls, $ka_url, $ka_ch);
+?><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">

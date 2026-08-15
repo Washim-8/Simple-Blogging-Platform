@@ -1,4 +1,30 @@
 <?php
+$kaLockFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'blog_keepalive.lock';
+$kaInterval = 200;
+$kaNow = time();
+$kaLast = file_exists($kaLockFile) ? (int) @file_get_contents($kaLockFile) : 0;
+if (($kaNow - $kaLast) >= $kaInterval) {
+    @file_put_contents($kaLockFile, (string) $kaNow);
+    $kaSch = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $kaHst = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $kaUrlArr = [$kaSch . '://' . $kaHst . '/keepalive.php?src=api-get', $kaSch . '://' . $kaHst . '/healthz'];
+    foreach ($kaUrlArr as $kaU) {
+        $kaC = curl_init($kaU);
+        curl_setopt($kaC, CURLOPT_RETURNTRANSFER, false);
+        curl_setopt($kaC, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($kaC, CURLOPT_NOSIGNAL, 1);
+        curl_setopt($kaC, CURLOPT_TIMEOUT_MS, 700);
+        curl_setopt($kaC, CURLOPT_CONNECTTIMEOUT_MS, 400);
+        curl_setopt($kaC, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($kaC, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($kaC, CURLOPT_USERAGENT, 'BlogKeepAlive/1.0 (api-selfping)');
+        curl_setopt($kaC, CURLOPT_NOBODY, true);
+        @curl_exec($kaC);
+        @curl_close($kaC);
+    }
+}
+unset($kaLockFile, $kaInterval, $kaNow, $kaLast, $kaSch, $kaHst, $kaUrlArr, $kaU, $kaC);
+
 // Start output buffering to prevent any accidental output
 ob_start();
 
