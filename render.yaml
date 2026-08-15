@@ -14,6 +14,18 @@ services:
           name: blog-db
           property: connectionString
 
+  - type: cron
+    name: blog-keep-awake
+    runtime: docker
+    repo: https://github.com/Washim-8/Simple-Blogging-Platform
+    branch: main
+    dockerfilePath: ./Dockerfile
+    schedule: "*/5 * * * *"
+    command: 'curl -fsS "$PING_URL/healthz" || echo "Ping failed (service may be cold-starting)"'
+    envVars:
+      - key: PING_URL
+        value: https://YOUR-RENDER-DOMAIN.onrender.com
+
 databases:
   - name: blog-db
     databaseName: blog_db

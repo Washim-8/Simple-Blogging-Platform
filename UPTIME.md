@@ -136,15 +136,87 @@ Render will periodically call this endpoint. If it returns a non-200 status mult
 
 ---
 
-## 4. External Uptime Monitoring
+## 4. Internal Keep-Alive: Render Cron Job (No External Sites)
 
-### Why External Monitoring?
+If you **do not want to use any external monitoring websites** (UptimeRobot, etc.), you can use Render's **native Cron Job feature** — it runs entirely inside Render's infrastructure, no third-party sites needed.
 
-On Render's **Free Tier**, web services spin down after 15 minutes of inactivity. An external uptime monitor can help reduce idle periods by making periodic HTTP requests to your health endpoint.
+### How It Works
+
+```
+Render Cron Scheduler (every 5 minutes)
+        │
+        ▼
+Runs: curl https://your-project.onrender.com/healthz
+        │
+        ▼
+Your web service wakes up / stays warm
+```
+
+This is **Render's own feature**, not a hack. The cron job is defined in `render.yaml` alongside your web service:
+
+```yaml
+services:
+  - type: web
+    name: simple-blog-platform
+    # ... (your web service config) ...
+
+  - type: cron                        # ← Render's native cron job
+    name: blog-keep-awake
+    runtime: docker
+    schedule: "*/5 * * * *"          # Every 5 minutes
+    command: 'curl -fsS "$PING_URL/healthz" || echo "Ping failed"'
+    envVars:
+      - key: PING_URL
+        value: https://YOUR-RENDER-DOMAIN.onrender.com
+```
 
 ### Setup Instructions
 
-Choose **one or more** of the following free monitoring services:
+1. **Push `render.yaml` changes to GitHub** (already done if you followed this guide)
+2. **Go to Render Dashboard → "Blueprints"**
+3. If you already deployed via Blueprint:
+   - Render will detect the `render.yaml` change and auto-add the cron job
+   - Or click **"Manual Deploy" → "Deploy latest commit"**
+4. If not using Blueprint mode:
+   - Go to **"New +" → "Cron Job"**
+   - Connect the same repo (`Washim-8/Simple-Blogging-Platform`)
+   - Configure:
+     ```
+     Name: blog-keep-awake
+     Branch: main
+     Runtime: Docker
+     Dockerfile Path: ./Dockerfile
+     Schedule: */5 * * * *
+     Command: curl -fsS "$PING_URL/healthz" || echo "Ping failed"
+     Environment Variable PING_URL = https://YOUR-RENDER-DOMAIN.onrender.com
+     ```
+5. **IMPORTANT:** Replace `YOUR-RENDER-DOMAIN` with your actual subdomain (e.g. `simple-blog-platform.onrender.com`)
+
+### Set PING_URL After First Deploy
+
+After your web service is live and you know its actual domain:
+
+1. Go to **Render Dashboard → Cron Jobs → blog-keep-awake → Environment**
+2. Edit the `PING_URL` variable:
+   ```
+   Key:   PING_URL
+   Value: https://simple-blog-platform.onrender.com   ← put your REAL domain here
+   ```
+3. Save changes → cron job redeploys automatically
+
+### Cron Job Free-Tier Quota
+
+Render free cron jobs are billed like web services (minutes count toward your 750h/month cap). A 5-minute curl ping takes ~1 second, so monthly usage is:
+
+```
+12 pings/hour × 24 hours × 30 days × ~0.02 min/ping ≈ 17 minutes/month
+```
+
+**≈ 17 minutes out of 750 hours (45,000 minutes)** — negligible impact.
+
+---
+
+## 5. External Uptime Monitoring (Optional Alternatives)
 
 #### Option A: UptimeRobot (Recommended, Free Tier)
 
