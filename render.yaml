@@ -2,11 +2,10 @@ services:
   - type: web
     name: simple-blog-platform
     runtime: docker
-    repo: https://github.com/Washim-8/Simple-Blogging-Platform
-    branch: main
+    plan: free
     dockerfilePath: ./Dockerfile
     healthCheckPath: /healthz
-    autoDeploy: yes
+    autoDeploy: true
     envVars:
       - key: APP_ENV
         value: production
@@ -14,30 +13,6 @@ services:
         fromDatabase:
           name: blog-db
           property: connectionString
-
-  - type: cron
-    name: blog-keep-awake
-    runtime: docker
-    repo: https://github.com/Washim-8/Simple-Blogging-Platform
-    branch: main
-    dockerfilePath: ./Dockerfile
-    schedule: "*/2 * * * *"
-    command: 'for i in 1 2 3; do curl -fsS --max-time 10 "$PING_URL/keepalive.php?source=cron" && echo "Ping OK (attempt $i)" && break || echo "Ping attempt $i failed, retrying..."; sleep 2; done; echo "Done"'
-    envVars:
-      - key: PING_URL
-        value: https://simple-blogging-platform-6vqg.onrender.com
-
-  - type: cron
-    name: blog-keep-awake-2
-    runtime: docker
-    repo: https://github.com/Washim-8/Simple-Blogging-Platform
-    branch: main
-    dockerfilePath: ./Dockerfile
-    schedule: "1-59/4 * * * *"
-    command: 'for i in 1 2 3; do curl -fsS --max-time 10 "$PING_URL/healthz" && echo "Health ping OK" && break || echo "Health ping retry"; sleep 3; done; echo "Health cron done"'
-    envVars:
-      - key: PING_URL
-        value: https://simple-blogging-platform-6vqg.onrender.com
 
 databases:
   - name: blog-db

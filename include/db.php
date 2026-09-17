@@ -59,6 +59,9 @@ function getConnection() {
                 PDO::ATTR_EMULATE_PREPARES => false
             ]);
             
+            // Auto-initialize schema if not yet present
+            initializePostgresSchema($pdo);
+            
             return $pdo;
         } else {
             // No DATABASE_URL - use JSON fallback for local development
@@ -72,6 +75,29 @@ function getConnection() {
         $useJsonFallback = true;
         initializeJsonDatabase();
         return null;
+    }
+}
+
+/**
+ * Auto-initialize PostgreSQL schema safely if tables do not exist
+ * 
+ * @param PDO $pdo
+ */
+function initializePostgresSchema($pdo) {
+    static $schemaChecked = false;
+    if ($schemaChecked || !$pdo) {
+        return;
+    }
+    
+    try {
+        $schemaFile = __DIR__ . '/../db/schema.sql';
+        if (file_exists($schemaFile)) {
+            $schema = file_get_contents($schemaFile);
+            $pdo->exec($schema);
+        }
+        $schemaChecked = true;
+    } catch (Exception $e) {
+        // Suppress or handle gracefully
     }
 }
 

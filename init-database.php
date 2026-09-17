@@ -55,12 +55,24 @@ try {
     
     echo "Current posts count: {$count}\n\n";
     
-    // Ask if user wants to load sample data
-    echo "Do you want to load sample data? (yes/no): ";
-    $handle = fopen("php://stdin", "r");
-    $answer = trim(fgets($handle));
+    // Determine if seed data should be loaded
+    $loadSeed = false;
+    if (isset($argv) && in_array('--seed', $argv)) {
+        $loadSeed = true;
+    } elseif (getenv('SEED_DATABASE') === 'true' || getenv('SEED_DATABASE') === '1') {
+        $loadSeed = true;
+    } elseif (php_sapi_name() === 'cli' && defined('STDIN') && stream_isatty(STDIN)) {
+        echo "Do you want to load sample data? (yes/no): ";
+        $handle = fopen("php://stdin", "r");
+        if ($handle) {
+            $answer = trim((string) fgets($handle));
+            if (strtolower($answer) === 'yes' || strtolower($answer) === 'y') {
+                $loadSeed = true;
+            }
+        }
+    }
     
-    if (strtolower($answer) === 'yes' || strtolower($answer) === 'y') {
+    if ($loadSeed) {
         $seedFile = __DIR__ . '/db/seed.sql';
         if (file_exists($seedFile)) {
             echo "\nLoading sample data...\n";
