@@ -1,0 +1,42 @@
+name: Keep Render App Alive
+
+on:
+  schedule:
+    # Run every 5 minutes to stay ahead of Render's 15-minute inactivity timeout
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions dashboard
+
+jobs:
+  keep-alive-ping:
+    name: Ping Render Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Keep-Alive & Health Endpoint
+        run: |
+          TARGET_URL="${{ secrets.RENDER_APP_URL }}"
+          if [ -z "$TARGET_URL" ]; then
+            TARGET_URL="https://simple-blogging-platform-6vqg.onrender.com"
+          fi
+          TARGET_URL="${TARGET_URL%/}"
+          
+          echo "============================================="
+          echo "Pinging: $TARGET_URL/healthz"
+          echo "Time: $(date -u)"
+          echo "============================================="
+          
+          # First attempt: hit /healthz
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 "$TARGET_URL/healthz" || echo "000")
+          echo "Status: $HTTP_STATUS"
+          
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "✅ Render web service is ACTIVE & HEALTHY"
+          else
+            echo "⚠️ Health check returned $HTTP_STATUS. Trying /keepalive.php fallback..."
+            FALLBACK_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 "$TARGET_URL/keepalive.php?source=github-actions" || echo "000")
+            echo "Fallback status: $FALLBACK_STATUS"
+            if [ "$FALLBACK_STATUS" -eq 200 ]; then
+              echo "✅ Fallback keepalive ping succeeded"
+            else
+              echo "❌ Warning: App might be cold-starting or unreachable."
+            fi
+          fi

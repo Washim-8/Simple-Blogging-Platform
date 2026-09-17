@@ -9,9 +9,11 @@
     # RewriteCond %{HTTPS} off
     # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     
-    # Health check endpoints (clean URLs)
+    # Health check & Keep-alive endpoints (clean URLs)
+    RewriteRule ^health$ healthz.php [L]
     RewriteRule ^healthz$ healthz.php [L]
     RewriteRule ^readyz$ readyz.php [L]
+    RewriteRule ^keepalive$ keepalive.php [L]
     
     # If file or directory exists, serve it directly
     RewriteCond %{REQUEST_FILENAME} !-f

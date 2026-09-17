@@ -15,6 +15,12 @@ RUN a2enmod rewrite
 # Copy application files to the container
 COPY . /var/www/html/
 
+# Copy and configure entrypoint script (cleaning CRLF to LF)
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN tr -d '\r' < /usr/local/bin/entrypoint.sh > /usr/local/bin/entrypoint_clean.sh \
+    && mv /usr/local/bin/entrypoint_clean.sh /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
+
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
@@ -26,4 +32,6 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost/healthz || exit 1
 
-# Apache will start automatically via the base image
+# Start entrypoint script (handles keep-alive background ping and starts Apache)
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
